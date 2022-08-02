@@ -67,3 +67,66 @@ With the simapp process running, run these commands in another window:
 npm install
 npm run dev
 ```
+
+# Using with CLI
+arkond provided CLI for multisig by following command.
+
+## Prepare key to local key store
+
+### Source
+```arkond keys export <keyname>```
+
+### Destination
+```Save key to file <key from source>```
+
+```arkond keys import <keyname> <key file>```
+
+### Generate a Multisig key
+
+```arkond keys add --multisig=name1,name2,name3[...] --multisig-threshold=K new_key_name```
+
+K is the minimum number of private keys that must have signed the transactions that carry the public key's address as signer.
+
+### Transfer arkon to multisig wallet
+```arkond tx bank send (from) (to) (value)arkon --chain-id=arkon_1678-1 --fees 20arkon```
+
+### Create the multisig transaction
+```arkond tx bank send \
+    (from multisig) \
+    (to) \
+    (value)arkon \
+    --gas=200000 \
+    --fees=20arkon \
+    --chain-id=arkon_1678-1 \
+    --generate-only > unsignedTx.json
+```
+### Sign individually
+```arkond tx sign \
+    unsignedTx.json \
+    --multisig=(multisig address) \
+    --from=name1 \
+    --output-document=name1sig.json \
+    --chain-id=arkon_1678-1
+```
+```arkond tx sign \
+    unsignedTx.json \
+    --multisig=(multisig address) \
+    --from=name2 \
+    --output-document=name2sig.json \
+    --chain-id=arkon_1678-1
+```
+### Create multisignature
+Combine signatures to sign transaction.
+```arkond tx multisign \
+    unsignedTx.json \
+    multi \
+    name1sig.json name2sig.json \
+    --output-document=signedTx.json \
+    --chain-id=arkon_1678-1
+```
+
+### Broadcast transaction
+```arkond tx broadcast signedTx.json \
+    --chain-id=arkon_1678-1 \
+    --broadcast-mode=block
+```
